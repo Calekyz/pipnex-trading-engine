@@ -1,7 +1,3 @@
-/**
- * Base Strategy Class
- * All EA strategies extend this class
- */
 class BaseStrategy {
     constructor(config) {
         this.symbol = config.symbol || 'EUR/USD';
@@ -19,7 +15,6 @@ class BaseStrategy {
         this.positionMap = {};
     }
 
-    // Must be implemented by each strategy
     async onTick(marketData, brokerAdapter) {
         throw new Error('onTick() must be implemented by strategy');
     }
