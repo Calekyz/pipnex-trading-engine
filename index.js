@@ -1,11 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const cron = require('node-cron');
 const axios = require('axios');
 require('dotenv').config();
 
 const { BrokerFactory } = require('./brokers');
-const { ZillionaireEA } = require('./strategies/zillionaire');
+const { StrategyFactory } = require('./strategies');
 const { logger } = require('./utils/logger');
 
 const app = express();
@@ -40,6 +39,7 @@ app.get('/api/instances', (req, res) => {
         lastHeartbeat: data.lastHeartbeat,
         eaStatus: data.ea?.getStatus() || null,
         broker: data.broker,
+        strategyName: data.strategyName || 'Zillionaire EA',
     }));
     res.json({ instances });
 });
@@ -54,6 +54,7 @@ app.post('/api/instance/start', async (req, res) => {
             password, 
             server, 
             symbol, 
+            strategyName,
             config 
         } = req.body;
 
@@ -87,8 +88,9 @@ app.post('/api/instance/start', async (req, res) => {
             return res.status(401).json({ error: 'Failed to authenticate with broker' });
         }
 
-        // Create EA instance
-        const ea = new ZillionaireEA({
+        // Create EA instance using StrategyFactory
+        const strategyNameToUse = strategyName || 'Zillionaire EA';
+        const ea = StrategyFactory.create(strategyNameToUse, {
             clientId,
             broker,
             symbol: symbol || 'EUR/USD',
@@ -107,13 +109,14 @@ app.post('/api/instance/start', async (req, res) => {
             startedAt: new Date(),
             accountId,
             balance,
+            strategyName: strategyNameToUse,
         });
 
-        logger.info(`✅ EA started for client: ${clientId} on ${broker}`);
+        logger.info(`✅ EA started for client: ${clientId} on ${broker} (${strategyNameToUse})`);
 
         res.json({
             success: true,
-            message: `Zillionaire EA started for ${clientId}`,
+            message: `${strategyNameToUse} started for ${clientId}`,
             balance,
             status: ea.getStatus(),
         });
@@ -158,7 +161,7 @@ app.post('/api/instance/stop', async (req, res) => {
 
         res.json({
             success: true,
-            message: `Zillionaire EA stopped for ${clientId}`,
+            message: `${instance.strategyName || 'EA'} stopped for ${clientId}`,
         });
 
     } catch (error) {
@@ -185,6 +188,7 @@ app.get('/api/instance/:clientId/status', async (req, res) => {
         res.json({
             clientId,
             status: instance.status,
+            strategyName: instance.strategyName || 'Zillionaire EA',
             eaStatus: instance.ea.getStatus(),
             balance,
             positions: positions?.length || 0,
@@ -254,6 +258,7 @@ setInterval(async () => {
     const instances = Array.from(eaInstances.entries()).map(([clientId, data]) => ({
         clientId,
         status: data.status,
+        strategyName: data.strategyName || 'Zillionaire EA',
         eaStatus: data.ea?.getStatus() || null,
         balance: data.balance,
     }));
@@ -280,5 +285,8 @@ app.listen(PORT, () => {
     logger.info(`🚀 PipnexAi Trading Engine running on port ${PORT}`);
     logger.info(`📡 Health: http://localhost:${PORT}/health`);
     logger.info(`📡 Instances: http://localhost:${PORT}/api/instances`);
+    logger.info(`\n📊 Supported Strategies:`);
+    const { StrategyFactory } = require('./strategies');
+    StrategyFactory.getSupportedStrategies().forEach(s => logger.info(`   - ${s}`));
     logger.info(`\n📊 Supported Brokers: IC_MARKETS, VALETAX, EXNESS, JUST_MARKET, HFM, FXPRO, PEPPERSTONE`);
 });
