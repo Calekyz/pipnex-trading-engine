@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: pipnex-trading-engine
+    runtime: node
+    repo: https://github.com/yourusername/pipnex-trading-engine
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PLATFORM_URL
+        sync: false
+      - key: PLATFORM_API_KEY
+        sync: false
+      - key: LOG_LEVEL
+        value: info
