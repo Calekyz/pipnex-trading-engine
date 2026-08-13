@@ -3,8 +3,8 @@ const { KaironSwingMasterStrategy } = require('./kairon-swing-master');
 const { KaironScalperStrategy } = require('./kairon-scalper');
 const { NovaEdgeAIStrategy } = require('./nova-edge-ai');
 const { StraddleAIStrategy } = require('./straddle-ai');
+const { PipNexAIStrategy } = require('./pipnex-ai'); // <-- Add this
 
-// Strategy Factory
 class StrategyFactory {
     static create(strategyName, config) {
         const strategyMap = {
@@ -13,6 +13,7 @@ class StrategyFactory {
             'Kairon Scalper Aggressive': KaironScalperStrategy,
             'Nova Edge AI': NovaEdgeAIStrategy,
             'Straddle AI': StraddleAIStrategy,
+            'PipNex AI': PipNexAIStrategy, // <-- Add this
         };
 
         const StrategyClass = strategyMap[strategyName];
@@ -30,6 +31,7 @@ class StrategyFactory {
             'Kairon Scalper Aggressive',
             'Nova Edge AI',
             'Straddle AI',
+            'PipNex AI', // <-- Add this
         ];
     }
 }
@@ -40,5 +42,6 @@ module.exports = {
     KaironScalperStrategy,
     NovaEdgeAIStrategy,
     StraddleAIStrategy,
+    PipNexAIStrategy,
     StrategyFactory,
 };
